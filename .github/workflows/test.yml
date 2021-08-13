@@ -16,7 +16,15 @@ jobs:
       run: |
         uname -a
         sudo apt-get update
-        sudo apt-get -y install libelf-dev
+        sudo apt-get -y install libelf-dev device-tree-compiler
+
+    - name: Test example Device Tree
+      run: |
+        dtc -@ -Hboth -I dts -O dtb -o system-user.dtbo system-user.dtsi
+        dtc -@ -Hboth -I dtb -O dts -o round-trip.dtsi system-user.dtbo
+        echo "==== Round trip output ===="
+        cat round-trip.dtsi
+
     - name: Build w/ specific kernel version
       run: |
         install -d linux
@@ -24,6 +32,7 @@ jobs:
         make -C linux defconfig
         echo "CONFIG_IIO=y" >> linux/.config
         echo "CONFIG_IIO_BUFFER=y" >> linux/.config
+        echo "CONFIG_IIO_BUFFER_DMAENGINE=y" >> linux/.config
         make -C linux olddefconfig
         make -C linux modules_prepare
         make KERNELDIR="$PWD/linux"

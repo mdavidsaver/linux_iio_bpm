@@ -1,0 +1,74 @@
+/dts-v1/;
+/plugin/;
+  
+/ {
+  
+    fragment@0 {
+    
+        target-path = "/";
+        __overlay__ {
+            #address-cells = <0x02>;
+            #size-cells = <0x02>;
+
+            /* Example BRAM.
+             * pdev_bpm_mmio will expose as /dev/uio*
+             */
+            axi_bram_ctrl@a1000000 {
+                compatible = "xlnx,axi-bram-ctrl-4.0";
+                reg = <0x00 0xa1000000 0x00 0x80000>;
+                xlnx,bram-addr-width = <0x11>;
+                xlnx,bram-inst-mode = "EXTERNAL";
+                xlnx,ecc = <0x00>;
+                xlnx,ecc-onoff-reset-value = <0x00>;
+                xlnx,ecc-type = <0x00>;
+                xlnx,fault-inject = <0x00>;
+                xlnx,memory-depth = <0x20000>;
+                xlnx,s-axi-ctrl-addr-width = <0x20>;
+                xlnx,s-axi-ctrl-data-width = <0x20>;
+                xlnx,s-axi-id-width = <0x01>;
+                xlnx,s-axi-supports-narrow-burst = <0x01>;
+                xlnx,select-xpm = <0x01>;
+                xlnx,single-port-bram = <0x01>;
+            };
+
+            /* Example DMA buffer as /dev/iio:device*
+             */
+            rx_dma: dma@a0010000 {
+                compatible = "adi,axi-dmac-1.00.a";
+                reg = <0 0xa0010000 0 0x10000>;
+                #dma-cells = <1>;
+                #clock-cells = <0>;
+                // cf. https://www.xilinx.com/Attachment/Xilinx_Answer_71106_Advanced_DTS_Edit_example_v0.pdf
+                // PL_PS_Group0[0] -> 89
+                // IRQ_TYPE_LEVEL_HIGH     = 0x00000004
+                interrupt-parent = <&gic>;
+                interrupts = <0 89 0x04>;
+                // 71 may be PL0_REF?
+                clocks = <&clkc 71>;
+
+                adi,channels {
+                    #size-cells = <0>;
+                    #address-cells = <1>;
+                    dma-channel@0 {
+                        reg = <0>;
+                        // type: 0=MEM, 1=STREAM, 2=FIFO
+                        adi,source-bus-width = <64>;
+                        adi,source-bus-type = <2>;
+                        adi,destination-bus-width = <64>;
+                        adi,destination-bus-type = <0>;
+                        adi,length-width = <32>; // chan->max_length?
+                    };
+                };
+            };
+
+            bpm: bpm@0 {
+                compatible = "bnl,bpm-adma";
+                dmas = <&rx_dma 0>;
+                dma-names = "rx";
+
+                reg = <0 0 0 0>; /* dummy entry to quiet warning from dtc */
+            };
+
+        };
+    };
+};
