@@ -84,6 +84,7 @@ err:
 
 static struct of_device_id pdev_bpm_mmio_match[] = {
     { .compatible = "xlnx,axi-bram-ctrl-4.0" },
+    { .compatible = "xlnx,axi-bram-ctrl-4.1" },
     {},
 };
 
