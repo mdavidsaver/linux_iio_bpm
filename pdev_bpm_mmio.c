@@ -85,6 +85,9 @@ err:
 static struct of_device_id pdev_bpm_mmio_match[] = {
     { .compatible = "xlnx,axi-bram-ctrl-4.0" },
     { .compatible = "xlnx,axi-bram-ctrl-4.1" },
+    { .compatible = "xlnx,DDRInterface-ip-1.0" },
+    { .compatible = "xlnx,up-axi-1.0" },
+    { .compatible = "xlnx,sgdma-p2h-wrapper-1.0" },
     {},
 };
 
