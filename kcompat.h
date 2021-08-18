@@ -13,19 +13,21 @@
 
 #include <linux/iio/iio.h>
 #include <linux/iio/buffer.h>
-#ifdef CONFIG_IIO_BUFFER
-#include <linux/iio/buffer-dma.h>
-#endif
 #include <linux/iio/buffer-dmaengine.h>
 
 /* CONFIG_MATHWORKS_IP_CORE used as proxy for "this is mathworks fork of 4.9"
  */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) &&                           \
-    IS_MODULE(CONFIG_MATHWORKS_IP_CORE)
+    IS_ENABLED(CONFIG_MATHWORKS_IP_CORE)
 
-#ifndef CONFIG_IIO_BUFFER
+#if !IS_ENABLED(CONFIG_IIO_BUFFER)
 #error must CONFIG_IIO_BUFFER
 #endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
+#include <linux/iio/buffer_impl.h>
+#endif
+#include <linux/iio/buffer-dma.h>
 
 static int
 iio_dmaengine_buffer_submit_block_rx(struct iio_dma_buffer_queue *queue,
