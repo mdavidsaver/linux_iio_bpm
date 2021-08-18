@@ -4,12 +4,30 @@ on: [push, pull_request]
 
 jobs:
   specific:
-    name: With ${{ matrix.version }}
+    name: ${{ matrix.rev }}@${{ matrix.repo }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        version: ["4.9.1", "4.19.1", "5.9.6", "latest"]
+        include:
+          - repo: "torvalds/linux"
+            rev: "v4.9"
+
+          - repo: "torvalds/linux"
+            rev: "v4.19"
+
+          - repo: "torvalds/linux"
+            rev: "v5.9"
+
+          - repo: "torvalds/linux"
+            rev: "master"
+
+          - repo: "Xilinx/linux-xlnx"
+            rev: "xilinx-v2017.4"
+
+          - repo: "mathworks/xilinx-linux"
+            rev: "mathworks_zynq_vision_R21.1.0"
+
     steps:
     - uses: actions/checkout@v2
     - name: Dependencies
@@ -25,15 +43,18 @@ jobs:
         echo "==== Round trip output ===="
         cat round-trip.dtsi
 
-    - name: Build w/ specific kernel version
+    - name: Prepare kernel
       run: |
-        install -d linux
-        python3 fetch_linux.py ${{ matrix.version }} - | tar -C linux --strip-components=1 -xJ
+        git clone --depth 1 --branch "${{ matrix.rev }}" "https://github.com/${{ matrix.repo }}.git" linux
         make -C linux defconfig
+        echo "CONFIG_UIO=y" >> linux/.config
         echo "CONFIG_IIO=y" >> linux/.config
         echo "CONFIG_IIO_BUFFER=y" >> linux/.config
         echo "CONFIG_IIO_BUFFER_DMAENGINE=y" >> linux/.config
         make -C linux olddefconfig
         make -C linux modules_prepare
+
+    - name: Build
+      run: |
         make KERNELDIR="$PWD/linux"
         /usr/sbin/modinfo *.ko
