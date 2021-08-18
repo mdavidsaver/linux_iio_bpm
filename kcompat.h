@@ -4,12 +4,47 @@
  */
 
 #include <linux/version.h>
+#include <linux/kernel.h>
+#include <linux/kconfig.h>
 
 #include <linux/uio_driver.h>
+
+#include <linux/dmaengine.h>
 
 #include <linux/iio/iio.h>
 #include <linux/iio/buffer.h>
 #include <linux/iio/buffer-dmaengine.h>
+
+/* CONFIG_MATHWORKS_IP_CORE used as proxy for "this is mathworks fork of 4.9"
+ */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) &&                           \
+    IS_ENABLED(CONFIG_MATHWORKS_IP_CORE)
+
+#if !IS_ENABLED(CONFIG_IIO_BUFFER)
+#error must CONFIG_IIO_BUFFER
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
+#include <linux/iio/buffer_impl.h>
+#endif
+#include <linux/iio/buffer-dma.h>
+
+static int
+iio_dmaengine_buffer_submit_block_rx(struct iio_dma_buffer_queue *queue,
+                     struct iio_dma_buffer_block *block)
+{
+    return iio_dmaengine_buffer_submit_block(queue, block, DMA_DEV_TO_MEM);
+}
+
+static const struct iio_dma_buffer_ops iio_dmaengine_default_ops = {
+    .submit = iio_dmaengine_buffer_submit_block_rx,
+    .abort = iio_dmaengine_buffer_abort,
+};
+
+#define iio_dmaengine_buffer_alloc(DEV, CHAN)                                  \
+    iio_dmaengine_buffer_alloc(DEV, CHAN, &iio_dmaengine_default_ops, NULL)
+
+#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 static void devm_iio_device_unreg(struct device *dev, void *res)
