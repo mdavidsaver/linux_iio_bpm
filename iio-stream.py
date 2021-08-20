@@ -15,7 +15,7 @@ def getargs():
     P = ArgumentParser()
     P.add_argument('device')
     P.add_argument('chan')
-    P.add_argument('-D', '--depth', type=int, default=32)
+    P.add_argument('-D', '--depth', type=int, default=1024)
     return P
 
 def sysget(*parts):
@@ -31,6 +31,8 @@ class IIOBuffer(object):
         self.args = args
 
     def __enter__(self):
+        name = sysget(self.args.device, 'name').strip()
+        assert name=='bpm-adma', repr(name)
         fmt = sysget(self.args.device, 'scan_elements', 'in_%s_type'%self.args.chan)
         M = _scan_type.match(fmt.strip())
         print('sample format', M.groupdict())
@@ -40,6 +42,7 @@ class IIOBuffer(object):
         # ensure disabled
         syswrite(self.args.device, 'buffer', 'enable', value='0')
         self._dev = open(os.path.join('/dev', self.args.device), 'rb', 0)
+        print('buffer length', self.args.depth)
         syswrite(self.args.device, 'buffer', 'length', value=str(self.args.depth))
         syswrite(self.args.device, 'scan_elements', 'in_%s_en'%self.args.chan, value='1')
         syswrite(self.args.device, 'buffer', 'enable', value='1')
