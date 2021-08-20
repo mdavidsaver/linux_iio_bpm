@@ -20,10 +20,16 @@ jobs:
             rev: "v5.9"
 
           - repo: "torvalds/linux"
+            rev: "v5.13"
+
+          - repo: "torvalds/linux"
             rev: "master"
 
           - repo: "Xilinx/linux-xlnx"
             rev: "xilinx-v2017.4"
+
+          - repo: "Xilinx/linux-xlnx"
+            rev: "xilinx-v2021.1"
 
           - repo: "mathworks/xilinx-linux"
             rev: "mathworks_zynq_vision_R21.1.0"
