@@ -15,7 +15,8 @@ def getargs():
     P = ArgumentParser()
     P.add_argument('device')
     P.add_argument('chan')
-    P.add_argument('-D', '--depth', type=int, default=1024)
+    P.add_argument('-D', '--depth', type=int, default=16,
+                   help='Buffer depth in samples')
     return P
 
 def sysget(*parts):
@@ -42,7 +43,8 @@ class IIOBuffer(object):
         # ensure disabled
         syswrite(self.args.device, 'buffer', 'enable', value='0')
         self._dev = open(os.path.join('/dev', self.args.device), 'rb', 0)
-        print('buffer length', self.args.depth)
+        self.args.depth *= self.sample_size
+        print('buffer length', self.args.depth, 'bytes')
         syswrite(self.args.device, 'buffer', 'length', value=str(self.args.depth))
         syswrite(self.args.device, 'scan_elements', 'in_%s_en'%self.args.chan, value='1')
         syswrite(self.args.device, 'buffer', 'enable', value='1')
@@ -64,10 +66,13 @@ if __name__=='__main__':
     lastcnt = -1
     T0 = time.monotonic()
     with IIOBuffer(getargs().parse_args()) as B:
+        first = True
         while True:
             samples = B.read()
             if not samples:
                 print('Done')
                 break
 
-            print(samples)
+            if first:
+                 first = False
+                 print(len(samples), samples[:64])
