@@ -46,12 +46,11 @@ static const struct iio_chan_spec iio_bpm_spec[] = { {
     .channel = 0,
     .scan_index = BPM_SCAN,
     .scan_type = {
-         // 4x 32 bit unsigned = 16 bytes per scan
          .endianness = IIO_CPU,
          .sign = 'u',
          .realbits = 32u,
          .storagebits = 32u,
-         .repeat = 4u,
+         .repeat = 224u,
      },
 } };
 
